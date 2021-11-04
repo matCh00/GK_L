@@ -1,3 +1,4 @@
+import math
 import sys
 import random
 from glfw.GLFW import *
@@ -15,6 +16,29 @@ def shutdown():
 
 
 def render(time):
+
+    # glClear(GL_COLOR_BUFFER_BIT)
+    #
+    # simpleRectangle()
+    #
+    # drawRectangle(-90, -90, 40, 40)
+    #
+    # random.seed(8)
+    # c1 = random.randint(0, 1)
+    # c2 = random.randint(0, 1)
+    # c3 = random.randint(0, 1)
+    # d = random.uniform(0.5, 2.5)
+    # deformatedTriangle(0, -90, 40, 40, d, c1, c2, c3)
+
+    drawFractal1(-100, -100, 200, 200, 5)
+
+    # drawFractal2(0, -80, 200, 8, 5)
+
+    glFlush()
+
+
+# prostokąt z 6 punktów
+def simpleRectangle():
     glClear(GL_COLOR_BUFFER_BIT)
 
     glBegin(GL_TRIANGLES)
@@ -35,38 +59,34 @@ def render(time):
     glVertex2f(-50.0, 0.0)
     glEnd()
 
-    draw(-90, -90, 40, 40)
-
-    random.seed(8)
-    c1 = random.randint(0, 1)
-    c2 = random.randint(0, 1)
-    c3 = random.randint(0, 1)
-    d = random.uniform(0.5, 2.5)
-    draw2(0, -90, 40, 40, d, c1, c2, c3)
-
-    #glClear(GL_COLOR_BUFFER_BIT)  # wyczyszczenie poprzednich obrazków
-
-    #drawFractal1(0, 0, 200, 200)
-
-    #drawFractal2(0, 0, 75, 75)
-
-    #drawFractal2(-75, 75, 25, 25)
-
     glFlush()
 
 
-def draw(x, y, a, b):
+# prostokąt z 4 punktów
+def drawRectangle(x, y, a, b):
+
     glBegin(GL_TRIANGLES)
+    glColor3f(1.0, 1.0, 1.0)
+    glVertex2f(x, y)
     glColor3f(0.0, 1.0, 0.0)
+    glVertex2f(x, y + b)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex2f(x + a, y + b)
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glColor3f(1.0, 1.0, 1.0)
     glVertex2f(x, y)
     glColor3f(1.0, 0.0, 0.0)
-    glVertex2f(x, y + b)
+    glVertex2f(x + a, y + b)
     glColor3f(0.0, 0.0, 1.0)
     glVertex2f(x + a, y)
     glEnd()
 
 
-def draw2(x, y, a, b, d, c1, c2, c3):
+# losowy trójkąt
+def deformatedTriangle(x, y, a, b, d, c1, c2, c3):
+
     glBegin(GL_TRIANGLES)
     glColor3f(c1, c2, c3)
     glVertex2f(x * d, y * d)
@@ -77,42 +97,34 @@ def draw2(x, y, a, b, d, c1, c2, c3):
     glEnd()
 
 
-def drawFractal1(x, y, a, b):
-    a /= 2
-    b /= 2
-    glColor3f(1.0, 1.0, 0.0)
-    glBegin(GL_TRIANGLES)
-    glVertex2f(x - a, y + b)
-    glVertex2f(x + a, y - b)
-    glVertex2f(x + a, y + b)
-    glEnd()
+# dywan Sierpińskiego
+def drawFractal1(x, y, a, b, deep):
 
-    glColor3f(1.0, 1.0, 0.0)
-    glBegin(GL_TRIANGLES)
-    glVertex2f(x - a, y - b)
-    glVertex2f(x - a, y + b)
-    glVertex2f(x + a, y - b)
-    glEnd()
+    rectangles = [(x, y, a, b)]
+    drawRectangle(x, y, a, b)
+
+    for _ in range(deep):
+        newRectangles = []
+
+        for rect in rectangles:
+            x, y = rect[0], rect[1]
+            a = rect[2] / 3
+            b = rect[3] / 3
+            drawRectangle(x + a, y + b, a, b)
+            newRectangles.append((x, y, a, b))
+            newRectangles.append((x + a, y, a, b))
+            newRectangles.append((x + 2 * a, y, a, b))
+            newRectangles.append((x, y + b, a, b))
+            newRectangles.append((x + 2 * a, y + b, a, b))
+            newRectangles.append((x, y + 2 * b, a, b))
+            newRectangles.append((x + a, y + 2 * b, a, b))
+            newRectangles.append((x + 2 * a, y + 2 * b, a, b))
+
+        rectangles = newRectangles
 
 
-def drawFractal2(x, y, a, b):  # (x,y) to środek, a i b to wymiary
-    a /= 2
-    b/= 2
-    glColor3f(0.5, 0.5, 0.5)
-    glBegin(GL_TRIANGLES)
-    glVertex2f(x - a, y + b)
-    glVertex2f(x + a, y - b)
-    glVertex2f(x + a, y + b)
-    glEnd()
-
-    glColor3f(0.5, 0.5, 0.5)
-    glBegin(GL_TRIANGLES)
-    glVertex2f(x - a, y - b)
-    glVertex2f(x - a, y + b)
-    glVertex2f(x + a, y - b)
-    glEnd()
-
-    # drawFractal2(x, y, a, b, r * r)
+def drawFractal2(x, y, a, b, level, deep=5):
+    pass
 
 
 def update_viewport(window, width, height):
@@ -138,6 +150,7 @@ def update_viewport(window, width, height):
 
 
 def main():
+
     if not glfwInit():
         sys.exit(-1)
 
@@ -149,14 +162,13 @@ def main():
     glfwMakeContextCurrent(window)
     glfwSetFramebufferSizeCallback(window, update_viewport)
     glfwSwapInterval(1)
-
     startup()
+
     while not glfwWindowShouldClose(window):
         render(glfwGetTime())
         glfwSwapBuffers(window)
         glfwPollEvents()
     shutdown()
-
     glfwTerminate()
 
 
