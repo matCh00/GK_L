@@ -1,6 +1,6 @@
-import random
+import math
 import sys
-import numpy as np
+import random
 from glfw.GLFW import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -8,191 +8,159 @@ from OpenGL.GLU import *
 
 def startup():
     update_viewport(None, 400, 400)
-    glClearColor(0.0, 0.0, 0.0, 1.0)
-    glEnable(GL_DEPTH_TEST)
+    glClearColor(0.5, 0.5, 0.5, 1.0)
 
 
 def shutdown():
     pass
 
 
-# obrót
-def spin(angle):
-    glRotatef(angle, 1.0, 0.0, 0.0)
-    glRotatef(angle, 0.0, 1.0, 0.0)
-    glRotatef(angle, 0.0, 0.0, 1.0)
-
-
-# rysowanie linii XYZ
-def axes():
-    glBegin(GL_LINES)
-
-    glColor3f(1.0, 0.0, 0.0)
-    glVertex3f(-5.0, 0.0, 0.0)
-    glVertex3f(5.0, 0.0, 0.0)
-
-    glColor3f(0.0, 1.0, 0.0)
-    glVertex3f(0.0, -5.0, 0.0)
-    glVertex3f(0.0, 5.0, 0.0)
-
-    glColor3f(0.0, 0.0, 1.0)
-    glVertex3f(0.0, 0.0, -5.0)
-    glVertex3f(0.0, 0.0, 5.0)
-
-    glEnd()
-
-
-# wstęp do tworzenia jajek
-def createVertices(N):
-
-    # tablica wierzchołków
-    vertices = np.zeros((N, N, 3))
-
-    # N-elementowe tablice wartości dla u i v
-    uArray = [u / (N - 1) for u in range(0, N)]  # <0,1>
-    vArray = [v / (N - 1) for v in range(0, N)]  # <0,1>
-
-    # obliczenie x, y, z dla każdej pary (u v)
-    for i in range(0, N):
-        for j in range(0, N):
-
-            # wartości x
-            vertices[i][j][0] = ((-90 * uArray[i] ** 5 + 225 * uArray[i] ** 4 - 270 * uArray[i] ** 3
-                                   + 180 * uArray[i] ** 2 - 45 * uArray[i]) * np.cos(np.pi * vArray[j]))
-            # wartości y
-            vertices[i][j][1] = (160 * uArray[i] ** 4 - 320 * uArray[i] ** 3 + 160 * uArray[i] ** 2) - 0.05
-
-            # wartości z
-            vertices[i][j][2] = ((-90 * uArray[i] ** 5 + 225 * uArray[i] ** 4 - 270 * uArray[i] ** 3
-                                   + 180 * uArray[i] ** 2 - 45 * uArray[i]) * np.sin(np.pi * vArray[j]))
-
-    return vertices
-
-
-# funkcja rysująca jajko z punktów
-def eggOfPoints():
-
-    glColor3f(1.0, 1.0, 1.0)
-    glBegin(GL_POINTS)
-
-    # tworzenie punktów o współrzędnych (x,y,z)
-    for i in range(0, N):
-        for j in range(0, N):
-            glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-
-    glEnd()
-
-
-# funkcja rysująca jajko z linii
-def eggOfLines():
-
-    glColor3f(1.0, 1.0, 1.0)
-
-    for i in range(0, N - 1):
-        for j in range(0, N - 1):
-
-            # łączenie elementów (i,j) z elementami (i+1,j)
-            glBegin(GL_LINES)
-            glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-            glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-            glEnd()
-
-            # łączenie elementów (i,j) z elementami (i,j+1)
-            glBegin(GL_LINES)
-            glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-            glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-            glEnd()
-
-
-# funkcja rysująca jajko z trójkątów
-def eggOfTriangles():
-
-    for i in range(0, N - 1):
-        for j in range(0, N - 1):
-
-            glBegin(GL_TRIANGLES)
-
-            # każdy trójkąt ma inny kolor
-            # połaczenie elementu (i,j) z elementami (i+1,j) oraz (i,j+1)
-            glColor3f(colors[i][j][0], colors[i][j][1], colors[i][j][2])
-            glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-            glColor3f(colors[i + 1][j][1], colors[i + 1][j][2], colors[i + 1][j][3])
-            glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-            glColor3f(colors[i][j + 1][2], colors[i][j + 1][3], colors[i][j + 1][4])
-            glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-            glEnd()
-
-            glBegin(GL_TRIANGLES)
-
-            # każdy trójkąt ma inny kolor
-            # rysowanie trójkąta dopełniającego -> połaczenie elementu (i+1,j+1) z elementami (i+1,j) oraz (i,j+1)
-            glColor3f(colors[i + 1][j][3], colors[i + 1][j][4], colors[i + 1][j][5])
-            glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-            glColor3f(colors[i][j + 1][4], colors[i][j + 1][5], colors[i][j + 1][6])
-            glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-            glColor3f(colors[i + 1][j + 1][5], colors[i + 1][j + 1][6], colors[i + 1][j + 1][7])
-            glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
-            glEnd()
-
-            # glBegin(GL_TRIANGLES)
-            #
-            # # usunięcie czarnej kreski
-            # if j == N - 2:
-            #     glColor3f(colors[i][0][0], colors[i][0][1], colors[i][0][2])
-            # else:
-            #     glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
-            # glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-            # glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][2])
-            # glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-            #
-            # if j == N - 2:
-            #     glColor3f(colors[i + 1][0][0], colors[i + 1][0][1], colors[i + 1][0][2])
-            # else:
-            #     glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][2])
-            # glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
-            # glEnd()
-
-
-# funkcja rysująca jajko z prymitywów paskowych
-def eggOfTriangleStrips():
-
-    glBegin(GL_TRIANGLE_STRIP)
-
-    for i in range(N - 1):
-        for j in range(N - 1):
-
-            # każdy trójkąt ma inny kolor
-            # budowanie warstwy modelu za pomocą jednego paska
-            glColor3f(colors[i][j][0], colors[i][j][1], colors[i][j][2])
-            glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-            glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
-            glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-            glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][2])
-            glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-            glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][2])
-            glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
-    glEnd()
-
-
 def render(time):
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glLoadIdentity()
 
-    # obracanie obiektu
-    spin(time * 180 / 3.1415)
+    glClear(GL_COLOR_BUFFER_BIT)
 
-    # rysowanie osi x,y,z
-    axes()
+    # simpleTriangle()
+    # drawTriangle(-100, -100, 100)
 
-    # eggOfPoints()
+    # drawRectangle(-50, 50, 100, 100)
 
-    # eggOfLines()
+    # random.seed(8)
+    # c1 = random.randint(0, 1)
+    # c2 = random.randint(0, 1)
+    # c3 = random.randint(0, 1)
+    # d = random.uniform(0.5, 2.5)
+    # deformatedTriangle(0, 0, 40, 40, d, c1, c2, c3)
 
-    # eggOfTriangles()
+    # drawFractal1(-100, 100, 200, 200, 5)
 
-    eggOfTriangleStrips()
+    drawFractal2(0, -90, 30, math.pi/2.0, 0.8, math.pi/6.0, 12)
 
     glFlush()
+
+
+# prostokąt z 6 punktów
+def simpleTriangle():
+    glClear(GL_COLOR_BUFFER_BIT)
+
+    glBegin(GL_TRIANGLES)
+    glColor3f(0.0, 1.0, 0.0)
+    glVertex2f(0.0, 0.0)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex2f(0.0, 50.0)
+    glColor3f(0.0, 0.0, 1.0)
+    glVertex2f(50.0, 0.0)
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glColor3f(0.0, 1.0, 0.0)
+    glVertex2f(0.0, 0.0)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex2f(0.0, 50.0)
+    glColor3f(0.0, 0.0, 1.0)
+    glVertex2f(-50.0, 0.0)
+    glEnd()
+
+    glFlush()
+
+
+# prostokąt z 4 punktów, (x,y) to współżędne lewego górnego rogu
+def drawRectangle(x, y, a, b):
+
+    if x < -100:
+        x = -100
+    if y > 100:
+        y = 100
+    if x + b > 100:
+        x = 100 - b
+    if y - a < -100:
+        y = -100 + a
+
+    glBegin(GL_TRIANGLES)
+    glColor3f(1.0, 1.0, 0.0)
+    glVertex2f(x, y)
+    glColor3f(0.0, 1.0, 0.0)
+    glVertex2f(x, y - b)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex2f(x + a, y - b)
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glColor3f(1.0, 1.0, 0.0)
+    glVertex2f(x, y)
+    glColor3f(0.0, 0.0, 1.0)
+    glVertex2f(x + a, y)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex2f(x + a, y - b)
+    glEnd()
+
+
+# trójkąt, (a,b) to współżędne lewego dolnego rogu
+def drawTriangle(a, b, d):
+
+    glBegin(GL_TRIANGLES)
+    glColor3f(0.8, 0.5, 0.1)
+    glVertex2f(a, b)
+    glColor3f(0.2, 0.0, 0.4)
+    glVertex2f(a + d, b)
+    glColor3f(1.0, 0.0, 0.3)
+    glVertex2f(a, d + b)
+    glEnd()
+
+
+# losowy trójkąt, (x,y) to współżędne lewego dolnego rogu
+def deformatedTriangle(x, y, a, b, d, c1, c2, c3):
+
+    glBegin(GL_TRIANGLES)
+    glColor3f(c1, c2, c3)
+    glVertex2f(x * d, y * d)
+    glColor3f(c2, c3, c1)
+    glVertex2f(x * d, (y + b) * d)
+    glColor3f(c3, c1, c2)
+    glVertex2f((x + a) * d, y * d)
+    glEnd()
+
+
+# dywan Sierpińskiego
+def drawFractal1(x, y, a, b, level):
+
+    k = 3.0
+
+    if level > 0:
+        new_x = x + (b / k)
+        new_y = y - (a / k)
+        new_a = a / k
+        new_b = b / k
+        drawRectangle(new_x, new_y, new_a, new_b)
+
+        if level > 1:
+            for i in range(0, 3):
+                for j in range(0, 3):
+                    if i == 1 and j == 1:
+                        continue
+                    drawFractal1(x + (new_b * i), y - (new_a * j), new_a, new_b, level - 1)
+
+
+def fractal2(x, y, len, angle):
+
+    glBegin(GL_LINES)
+    glVertex2f(x, y)
+    glVertex2f(x + len * math.cos(angle), y + len * math.sin(angle))
+    glEnd()
+
+
+# inny fraktal
+def drawFractal2(x, y, len, angle, len_div, angle_dif, depth):
+
+    fractal2(x, y, len, angle)
+
+    if depth <= 0:
+        return
+
+    # lewa gałąź
+    drawFractal2(x + len * math.cos(angle), y + len * math.sin(angle), len * len_div, angle - angle_dif, len_div, angle_dif, depth - 1)
+
+    # prawa gałąź
+    drawFractal2(x + len * math.cos(angle), y + len * math.sin(angle), len * len_div, angle + angle_dif, len_div, angle_dif, depth - 1)
 
 
 def update_viewport(window, width, height):
@@ -207,33 +175,17 @@ def update_viewport(window, width, height):
     glLoadIdentity()
 
     if width <= height:
-        glOrtho(-7.5, 7.5, -7.5 / aspect_ratio, 7.5 / aspect_ratio, 7.5, -7.5)
+        glOrtho(-100.0, 100.0, -100.0 / aspect_ratio, 100.0 / aspect_ratio,
+                1.0, -1.0)
     else:
-        glOrtho(-7.5 * aspect_ratio, 7.5 * aspect_ratio, -7.5, 7.5, 7.5, -7.5)
+        glOrtho(-100.0 * aspect_ratio, 100.0 * aspect_ratio, -100.0, 100.0,
+                1.0, -1.0)
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
 
 def main():
-
-    global N
-    global vertices
-    global colors
-
-    # ilość wierzchołków
-    N = 30
-
-    # tablica wierzchołków
-    vertices = createVertices(N)
-
-    # tablica losowych kolorów
-    colors = np.zeros((N, N, 8))
-    for i in range(0, N):
-        for j in range(0, N - 1):
-            for k in range(0, 8):
-                colors[i][j][k] = random.random()  # <0,1>
-
 
     if not glfwInit():
         sys.exit(-1)
@@ -246,13 +198,13 @@ def main():
     glfwMakeContextCurrent(window)
     glfwSetFramebufferSizeCallback(window, update_viewport)
     glfwSwapInterval(1)
+    startup()
 
     while not glfwWindowShouldClose(window):
         render(glfwGetTime())
         glfwSwapBuffers(window)
         glfwPollEvents()
     shutdown()
-
     glfwTerminate()
 
 
