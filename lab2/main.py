@@ -42,14 +42,17 @@ def axes():
     glEnd()
 
 
-# tworzenie tablicy wierzchołków
+# wstęp do tworzenia jajek
 def createVertices(N):
 
+    # tablica wierzchołków
     vertices = np.zeros((N, N, 3))
 
+    # N-elementowe tablice wartości dla u i v
     uArray = [u / (N - 1) for u in range(0, N)]  # <0,1>
     vArray = [v / (N - 1) for v in range(0, N)]  # <0,1>
 
+    # obliczenie x, y, z dla każdej pary (u v)
     for i in range(0, N):
         for j in range(0, N):
 
@@ -72,6 +75,7 @@ def eggOfPoints():
     glColor3f(1.0, 1.0, 1.0)
     glBegin(GL_POINTS)
 
+    # tworzenie punktów o współrzędnych (x,y,z)
     for i in range(0, N):
         for j in range(0, N):
             glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
@@ -87,11 +91,13 @@ def eggOfLines():
     for i in range(0, N - 1):
         for j in range(0, N - 1):
 
+            # łączenie elementów (i,j) z elementami (i+1,j)
             glBegin(GL_LINES)
             glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
             glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
             glEnd()
 
+            # łączenie elementów (i,j) z elementami (i,j+1)
             glBegin(GL_LINES)
             glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
             glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
@@ -106,26 +112,45 @@ def eggOfTriangles():
 
             glBegin(GL_TRIANGLES)
 
+            # każdy trójkąt ma inny kolor
+            # połaczenie elementu (i,j) z elementami (i+1,j) oraz (i,j+1)
             glColor3f(colors[i][j][0], colors[i][j][1], colors[i][j][2])
             glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-
             glColor3f(colors[i + 1][j][1], colors[i + 1][j][2], colors[i + 1][j][3])
             glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-
             glColor3f(colors[i][j + 1][2], colors[i][j + 1][3], colors[i][j + 1][4])
             glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
             glEnd()
 
             glBegin(GL_TRIANGLES)
+
+            # każdy trójkąt ma inny kolor
+            # rysowanie trójkąta dopełniającego -> połaczenie elementu (i+1,j+1) z elementami (i+1,j) oraz (i,j+1)
             glColor3f(colors[i + 1][j][3], colors[i + 1][j][4], colors[i + 1][j][5])
             glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-
             glColor3f(colors[i][j + 1][4], colors[i][j + 1][5], colors[i][j + 1][6])
             glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-
             glColor3f(colors[i + 1][j + 1][5], colors[i + 1][j + 1][6], colors[i + 1][j + 1][7])
             glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
             glEnd()
+
+            # glBegin(GL_TRIANGLES)
+            #
+            # # usunięcie czarnej kreski
+            # if j == N - 2:
+            #     glColor3f(colors[i][0][0], colors[i][0][1], colors[i][0][2])
+            # else:
+            #     glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
+            # glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
+            # glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][2])
+            # glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
+            #
+            # if j == N - 2:
+            #     glColor3f(colors[i + 1][0][0], colors[i + 1][0][1], colors[i + 1][0][2])
+            # else:
+            #     glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][2])
+            # glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
+            # glEnd()
 
 
 # funkcja rysująca jajko z prymitywów paskowych
@@ -135,31 +160,17 @@ def eggOfTriangleStrips():
 
     for i in range(N - 1):
         for j in range(N - 1):
-            if (j != N - 2):
 
-                glColor3f(colors[i][j][0], colors[i][j][1], colors[i][j][2])
-                glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-
-                glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
-                glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-
-                glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][2])
-                glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-
-                glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][2])
-                glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
-            else:
-                glColor3f(colors[i][j][0], colors[i][j][1], colors[i][j][2])
-                glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-
-                glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
-                glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-
-                glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][0])
-                glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-
-                glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][0])
-                glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
+            # każdy trójkąt ma inny kolor
+            # budowanie warstwy modelu za pomocą jednego paska
+            glColor3f(colors[i][j][0], colors[i][j][1], colors[i][j][2])
+            glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
+            glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
+            glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
+            glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][2])
+            glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
+            glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][2])
+            glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
     glEnd()
 
 
@@ -167,8 +178,10 @@ def render(time):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
+    # obracanie obiektu
     spin(time * 180 / 3.1415)
 
+    # rysowanie osi x,y,z
     axes()
 
     # eggOfPoints()
@@ -209,7 +222,7 @@ def main():
     global colors
 
     # ilość wierzchołków
-    N = 40
+    N = 30
 
     # tablica wierzchołków
     vertices = createVertices(N)
