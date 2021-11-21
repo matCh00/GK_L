@@ -134,24 +134,6 @@ def eggOfTriangles():
             glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
             glEnd()
 
-            glBegin(GL_TRIANGLES)
-
-            # usunięcie czarnej kreski
-            if j == N - 2:
-                glColor3f(colors[i][0][0], colors[i][0][1], colors[i][0][2])
-            else:
-                glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
-            glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
-            glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][2])
-            glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-
-            if j == N - 2:
-                glColor3f(colors[i + 1][0][0], colors[i + 1][0][1], colors[i + 1][0][2])
-            else:
-                glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][2])
-            glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
-            glEnd()
-
 
 # funkcja rysująca jajko z prymitywów paskowych
 def eggOfTriangleStrips():
@@ -159,18 +141,14 @@ def eggOfTriangleStrips():
     glBegin(GL_TRIANGLE_STRIP)
 
     for i in range(N - 1):
-        for j in range(N - 1):
+        for j in range(N):
 
             # każdy trójkąt ma inny kolor
             # budowanie warstwy modelu za pomocą jednego paska
             glColor3f(colors[i][j][0], colors[i][j][1], colors[i][j][2])
             glVertex3f(vertices[i][j][0], vertices[i][j][1], vertices[i][j][2])
-            glColor3f(colors[i][j + 1][0], colors[i][j + 1][1], colors[i][j + 1][2])
-            glVertex3f(vertices[i][j + 1][0], vertices[i][j + 1][1], vertices[i][j + 1][2])
             glColor3f(colors[i + 1][j][0], colors[i + 1][j][1], colors[i + 1][j][2])
             glVertex3f(vertices[i + 1][j][0], vertices[i + 1][j][1], vertices[i + 1][j][2])
-            glColor3f(colors[i + 1][j + 1][0], colors[i + 1][j + 1][1], colors[i + 1][j + 1][2])
-            glVertex3f(vertices[i + 1][j + 1][0], vertices[i + 1][j + 1][1], vertices[i + 1][j + 1][2])
 
     glEnd()
 
@@ -185,13 +163,13 @@ def render(time):
     # rysowanie osi x,y,z
     axes()
 
-    eggOfPoints()
+    # eggOfPoints()
 
     # eggOfLines()
 
     # eggOfTriangles()
 
-    # eggOfTriangleStrips()
+    eggOfTriangleStrips()
 
     glFlush()
 
@@ -223,7 +201,7 @@ def main():
     global colors
 
     # ilość wierzchołków
-    N = 42
+    N = 30
 
     # tablica wierzchołków
     vertices = createVertices(N)
@@ -233,7 +211,6 @@ def main():
     for i in range(0, N):
         for j in range(0, N):
             for k in range(0, 8):
-                #colors[i][j][k] = random.randint(0, 1)  # <0,1>
                 colors[i][j][k] = random.random()  # <0,1>
 
 
@@ -248,6 +225,8 @@ def main():
     glfwMakeContextCurrent(window)
     glfwSetFramebufferSizeCallback(window, update_viewport)
     glfwSwapInterval(1)
+
+    startup()
 
     while not glfwWindowShouldClose(window):
         render(glfwGetTime())
