@@ -13,61 +13,72 @@ phi = 0.0
 theta = 0.0
 delta_x, delta_y = 0, 0
 pix2angle = 1.0
+scale = 1.0
 
 left_mouse_button_pressed, right_mouse_button_pressed = 0, 0
 mouse_x_pos_old, mouse_y_pos_old = 0, 0
 delta_x, delta_y = 0, 0
 
-r = 1.0
-tab_pressed = 0
-
 
 # obliczanie kątów (obracanie obiektu)
-def calculate_angles(theta, phi):
+def calculate_angles_on_left_mouse_button_pressed(scale, theta, phi):
 
     if left_mouse_button_pressed:
-        theta += delta_x * pix2angle  # zmiana theta (obrót wokół osi Y)
-        phi += delta_y * pix2angle  # zmiana phi (obrót wokół osi X)
 
-    return theta, phi
+        # zmiana theta (obrót wokół osi Y)
+        theta += delta_x * pix2angle
+
+        # zmiana phi (obrót wokół osi X)
+        phi += delta_y * pix2angle
+
+    # skalowanie
+    if right_mouse_button_pressed:
+        scale += 0.0055 * delta_y
+
+    return scale, theta, phi
+
+
+# obliczanie radianów (obracanie obiektu)
+def calculate_radians_on_left_mouse_button_pressed(scale, theta, phi):
+
+    if left_mouse_button_pressed:
+
+        # zmiana theta (obrót wokół osi Y)
+        theta += delta_x * pix2radian
+
+        # zmiana phi (obrót wokół osi X)
+        phi += delta_y * pix2radian
+
+    # skalowanie
+    if right_mouse_button_pressed:
+        scale += 0.0555 * delta_y
+
+    phi %= (2 * math.pi)
+    theta %= (2 * math.pi)
+
+    return scale, theta, phi
 
 
 # obliczanie x, y, z (poruszanie kamery)
-def calculate_x_y_z(theta, phi):
-    global r
+def calculate_xyz(scale, phi, theta):
 
-    # theta_to_rad = abs(math.radians(theta % 360))
-    # phi_to_rad = abs(math.radians(phi % 360))
-
-    x_eye = r * math.cos(theta) * math.cos(phi)
-    y_eye = r * math.sin(phi)
-    z_eye = r * math.sin(theta) * math.cos(phi)
+    x_eye = scale * math.cos(theta) * math.cos(phi)
+    y_eye = scale * math.sin(phi)
+    z_eye = scale * math.sin(theta) * math.cos(phi)
 
     return x_eye, y_eye, z_eye
 
 
-# obracanie obiektu wokół osi X i Y
-def rotate():
-    global theta, phi
-
-    theta, phi = calculate_angles(theta, phi)
-
-    # obracanie wokół osi Y
-    glRotatef(theta, 0.0, 1.0, 0.0)
-
-    # obracanie wokół osi X
-    glRotatef(phi, 1.0, 0.0, 0.0)
-
-
-# obracanie i skalowanie obiektu
+# obracanie wokół osi X i Y oraz skalowanie obiektu
 def rotate_and_scale():
-    global theta, phi, r
+    global theta, phi, scale
 
-    theta, phi = calculate_angles(theta, phi)
+    scale, theta, phi = calculate_angles_on_left_mouse_button_pressed(scale, theta, phi)
 
-    # skalowanie
-    if right_mouse_button_pressed:
-        r += 0.0055 * delta_y
+    if scale < 0.3:
+        scale = 0.3
+    elif scale > 1.7:
+        scale = 1.7
 
     # obracanie wokół osi Y
     glRotatef(theta, 0.0, 1.0, 0.0)
@@ -76,45 +87,28 @@ def rotate_and_scale():
     glRotatef(phi, 1.0, 0.0, 0.0)
 
     # skalowanie
-    glScalef(r, r, r)
+    glScalef(scale, scale, scale)
 
 
 # poruszanie kamerą wokół modelu
 def move_camera():
-    global theta, phi, r
+    global theta, phi, scale
 
-    # obliczanie kątów
-    theta, phi = calculate_angles(theta, phi)
+    scale, theta, phi = calculate_radians_on_left_mouse_button_pressed(scale, theta, phi)
 
-    # PPM - skalowanie
-    if right_mouse_button_pressed:
-        r += 0.055 * delta_y
+    if scale < 0.01:
+        scale = 0.01
+    elif scale > 20:
+        scale = 20
 
-    # ograniczenia skalowania
-    if r < 0.005:
-        r = 0.005
-    elif r > 20:
-        r = 20
+    x, y, z = calculate_xyz(scale, phi, theta)
 
-    phi %= abs(np.radians(360))
-    theta %= abs(np.radians(360))
-
-    x, y, z = calculate_x_y_z(theta, phi)
-
-    top = -1
     if math.pi / 2 < phi < 3 * math.pi / 2:
         top = -1
     else:
         top = 1
 
-    if x > 0.01:
-        x = 0.01
-    if y > 0.01:
-        y = 0.01
-    if z > 0.01:
-        z = 0.01
-
-    gluLookAt(x, y, z, 0.0, 0.0, 0.0, 0.0, top, 0.0)
+    gluLookAt(x, y, z, 0, 0, 0, 0, top, 0)
 
 
 def startup():
@@ -182,6 +176,8 @@ def example_object():
 
 def render(time):
     global theta
+    global phi
+    global scale
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
@@ -189,15 +185,12 @@ def render(time):
     gluLookAt(viewer[0], viewer[1], viewer[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
     # 3.0
-    # rotate()
-
     # 3.5
-    # rotate_and_scale()
+    rotate_and_scale()
 
     # 4.0
-    # 4.5 - usprawnienie
-    move_camera()
-
+    # 4.5
+    # move_camera()
 
     axes()
     example_object()
@@ -206,8 +199,9 @@ def render(time):
 
 
 def update_viewport(window, width, height):
-    global pix2angle
+    global pix2angle, pix2radian
     pix2angle = 360.0 / width
+    pix2radian = 2 * math.pi / width
 
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
@@ -232,6 +226,7 @@ def mouse_motion_callback(window, x_pos, y_pos):
     global delta_x, delta_y
     global mouse_x_pos_old, mouse_y_pos_old
 
+    # obrót wokół osi y
     delta_x = x_pos - mouse_x_pos_old
     mouse_x_pos_old = x_pos
 
