@@ -387,7 +387,7 @@ def main():
     if not glfwInit():
         sys.exit(-1)
 
-    window = glfwCreateWindow(400, 400, __file__, None, None)
+    window = glfwCreateWindow(400, 400, "N - normal", None, None)
     if not window:
         glfwTerminate()
         sys.exit(-1)
