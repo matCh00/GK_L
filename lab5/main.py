@@ -19,13 +19,16 @@ mat_diffuse = [1.0, 1.0, 1.0, 1.0]
 mat_specular = [1.0, 1.0, 1.0, 1.0]
 mat_shininess = 20.0
 
-# pierwsze źródło światła (wartości)
-light_ambient = [0.1, 0.1, 0.0, 1.0]
+attributes = -1
+
+
+# rodzaje oświetlenia pierwszego źródła światła
+light_ambient = [0.0, 0.3, 0.2, 1.0]
 light_diffuse = [0.8, 0.8, 0.0, 1.0]
 light_specular = [1.0, 1.0, 1.0, 1.0]
 light_position = [0.0, 0.0, 10.0, 1.0]
 
-# drugie źródło światła (wartości)
+# rodzaje oświetlenia drugiego źródła światła
 light_ambient2 = [0.0, 0.0, 0.0, 1.0]
 light_diffuse2 = [0.0, 0.0, 1.0, 1.0]
 light_specular2 = [1.0, 1.0, 1.0, 1.0]
@@ -34,6 +37,51 @@ light_position2 = [5.0, 5.0, -5.0, 1.0]
 att_constant = 1.0
 att_linear = 0.05
 att_quadratic = 0.001
+
+
+# ZMIANA ATRYBUTÓW ŹRÓDEŁ ŚWIATŁA
+def change_attributes(increase):
+    global attributes
+    global light_ambient2, light_diffuse2, light_specular2
+
+    # 0, 1, 2 - ambient
+    if attributes in [0, 1, 2]:
+        if increase:
+            if light_ambient2[attributes % 3] <= 0.9:
+                light_ambient2[attributes % 3] += 0.1
+            print(f"ambient[{attributes % 3}] = {light_ambient2[attributes % 3]}")
+        else:
+            if light_ambient2[attributes % 3] >= 0.1:
+                light_ambient2[attributes % 3] -= 0.1
+            print(f"ambient[{attributes % 3}] = {light_ambient2[attributes % 3]}")
+
+        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2)
+
+    # 3, 4, 5 - diffuse
+    elif attributes in [3, 4, 5]:
+        if increase:
+            if light_diffuse2[attributes % 3] <= 0.9:
+                light_diffuse2[attributes % 3] += 0.1
+            print(f"diffuse[{attributes % 3}] = {light_diffuse2[attributes % 3]}")
+        else:
+            if light_diffuse2[attributes % 3] >= 0.1:
+                light_diffuse2[attributes % 3] -= 0.1
+            print(f"diffuse[{attributes % 3}] = {light_diffuse2[attributes % 3]}")
+
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse2)
+
+    # 6, 7, 8 - specular
+    elif attributes in [6, 7, 8]:
+        if increase:
+            if light_specular2[attributes % 3] <= 0.9:
+                light_specular2[attributes % 3] += 0.1
+            print(f"specular[{attributes % 3}] = {light_specular2[attributes % 3]}")
+        else:
+            if light_specular2[attributes % 3] >= 0.1:
+                light_specular2[attributes % 3] -= 0.1
+            print(f"specular[{attributes % 3}] = {light_specular2[attributes % 3]}")
+
+        glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular2)
 
 
 def startup():
@@ -82,8 +130,7 @@ def render(time):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
-    gluLookAt(viewer[0], viewer[1], viewer[2],
-              0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+    gluLookAt(viewer[0], viewer[1], viewer[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
     if left_mouse_button_pressed:
         theta += delta_x * pix2angle
@@ -117,6 +164,35 @@ def update_viewport(window, width, height):
 
 
 def keyboard_key_callback(window, key, scancode, action, mods):
+
+    global attributes
+
+    # ZMIENIANIE ATRYBÓTÓW DRUGIEGO ŹRÓDŁA ŚWIATŁA
+    # 0 - 8 -> wybieramy indeks atrybutów
+    # strzałki UP i DOWN -> zwiększają / zmniejszają wartości
+    if key == GLFW_KEY_1 and action == GLFW_PRESS:
+        attributes = 0
+    if key == GLFW_KEY_2 and action == GLFW_PRESS:
+        attributes = 1
+    if key == GLFW_KEY_3 and action == GLFW_PRESS:
+        attributes = 2
+    if key == GLFW_KEY_4 and action == GLFW_PRESS:
+        attributes = 3
+    if key == GLFW_KEY_5 and action == GLFW_PRESS:
+        attributes = 4
+    if key == GLFW_KEY_6 and action == GLFW_PRESS:
+        attributes = 5
+    if key == GLFW_KEY_7 and action == GLFW_PRESS:
+        attributes = 6
+    if key == GLFW_KEY_8 and action == GLFW_PRESS:
+        attributes = 7
+    if key == GLFW_KEY_9 and action == GLFW_PRESS:
+        attributes = 8
+    if key == GLFW_KEY_UP and action == GLFW_PRESS:
+        change_attributes(True)
+    if key == GLFW_KEY_DOWN and action == GLFW_PRESS:
+        change_attributes(False)
+
     if key == GLFW_KEY_ESCAPE and action == GLFW_PRESS:
         glfwSetWindowShouldClose(window, GLFW_TRUE)
 
