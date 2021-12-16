@@ -19,8 +19,10 @@ left_mouse_button_pressed, right_mouse_button_pressed = 0, 0
 mouse_x_pos_old, mouse_y_pos_old = 0, 0
 delta_x, delta_y = 0, 0
 
+mode = 0
 
-# obliczanie kątów (obracanie obiektu)
+
+# obliczanie kątów (OBRACANIE OBIEKTU)
 def calculate_angles_on_left_mouse_button_pressed(scale, theta, phi):
 
     if left_mouse_button_pressed:
@@ -33,48 +35,18 @@ def calculate_angles_on_left_mouse_button_pressed(scale, theta, phi):
 
     # skalowanie
     if right_mouse_button_pressed:
-        scale += 0.0055 * delta_y
+        scale += 0.005 * delta_y
 
     return scale, theta, phi
 
 
-# obliczanie radianów (obracanie obiektu)
-def calculate_radians_on_left_mouse_button_pressed(scale, theta, phi):
-
-    if left_mouse_button_pressed:
-
-        # zmiana theta (obrót wokół osi Y)
-        theta += delta_x * pix2radian
-
-        # zmiana phi (obrót wokół osi X)
-        phi += delta_y * pix2radian
-
-    # skalowanie
-    if right_mouse_button_pressed:
-        scale += 0.0555 * delta_y
-
-    phi %= (2 * math.pi)
-    theta %= (2 * math.pi)
-
-    return scale, theta, phi
-
-
-# obliczanie x, y, z (poruszanie kamery)
-def calculate_xyz(scale, phi, theta):
-
-    x_eye = scale * math.cos(theta) * math.cos(phi)
-    y_eye = scale * math.sin(phi)
-    z_eye = scale * math.sin(theta) * math.cos(phi)
-
-    return x_eye, y_eye, z_eye
-
-
-# obracanie wokół osi X i Y oraz skalowanie obiektu
+# OBRACANIE I SKALOWANIE OBIEKTU
 def rotate_and_scale():
     global theta, phi, scale
 
     scale, theta, phi = calculate_angles_on_left_mouse_button_pressed(scale, theta, phi)
 
+    # ograniczenia skalowania (powiększanie/zmniejszanie)
     if scale < 0.3:
         scale = 0.3
     elif scale > 1.7:
@@ -90,12 +62,44 @@ def rotate_and_scale():
     glScalef(scale, scale, scale)
 
 
-# poruszanie kamerą wokół modelu
+# obliczanie radianów (PORUSZANIE KAMERĄ)
+def calculate_radians_on_left_mouse_button_pressed(scale, theta, phi):
+
+    if left_mouse_button_pressed:
+
+        # zmiana theta (obrót wokół osi Y)
+        theta += delta_x * pix2radian
+
+        # zmiana phi (obrót wokół osi X)
+        phi += delta_y * pix2radian
+
+    # skalowanie
+    if right_mouse_button_pressed:
+        scale += 0.05 * delta_y
+
+    phi %= (2 * math.pi)
+    theta %= (2 * math.pi)
+
+    return scale, theta, phi
+
+
+# obliczanie x, y, z (PORUSZANIE KAMERĄ)
+def calculate_xyz(scale, phi, theta):
+
+    x_eye = scale * math.cos(theta) * math.cos(phi)
+    y_eye = scale * math.sin(phi)
+    z_eye = scale * math.sin(theta) * math.cos(phi)
+
+    return x_eye, y_eye, z_eye
+
+
+# PORUSZANIE KAMERĄ WOKÓŁ OBIEKTU
 def move_camera():
     global theta, phi, scale
 
     scale, theta, phi = calculate_radians_on_left_mouse_button_pressed(scale, theta, phi)
 
+    # limity skalowania (przybliżanie/oddalanie)
     if scale < 0.01:
         scale = 0.01
     elif scale > 20:
@@ -103,6 +107,7 @@ def move_camera():
 
     x, y, z = calculate_xyz(scale, phi, theta)
 
+    # zapobieganie obrotowi kamery dla danego kąta elewacji (str. 24 w prezentacji)
     if math.pi / 2 < phi < 3 * math.pi / 2:
         top = -1
     else:
@@ -178,19 +183,22 @@ def render(time):
     global theta
     global phi
     global scale
+    global mode
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
     gluLookAt(viewer[0], viewer[1], viewer[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
-    # 3.0
-    # 3.5
-    rotate_and_scale()
+    if mode == 0:
+        # 3.0
+        # 3.5
+        rotate_and_scale()
 
-    # 4.0
-    # 4.5
-    # move_camera()
+    elif mode == 1:
+        # 4.0
+        # 4.5
+        move_camera()
 
     axes()
     example_object()
@@ -218,8 +226,16 @@ def update_viewport(window, width, height):
 
 
 def keyboard_key_callback(window, key, scancode, action, mods):
+    global mode
+
     if key == GLFW_KEY_ESCAPE and action == GLFW_PRESS:
         glfwSetWindowShouldClose(window, GLFW_TRUE)
+
+    # obracanie obiektu / kamery w zależności od przycisku
+    elif key == GLFW_KEY_R and action == GLFW_PRESS:
+        mode = 0
+    elif key == GLFW_KEY_C and action == GLFW_PRESS:
+        mode = 1
 
 
 def mouse_motion_callback(window, x_pos, y_pos):
@@ -227,10 +243,12 @@ def mouse_motion_callback(window, x_pos, y_pos):
     global mouse_x_pos_old, mouse_y_pos_old
 
     # obrót wokół osi y
+    # zmiana x
     delta_x = x_pos - mouse_x_pos_old
     mouse_x_pos_old = x_pos
 
     # obrót wokół osi X
+    # zmiana y
     delta_y = y_pos - mouse_y_pos_old
     mouse_y_pos_old = y_pos
 
@@ -254,7 +272,7 @@ def main():
     if not glfwInit():
         sys.exit(-1)
 
-    window = glfwCreateWindow(400, 400, __file__, None, None)
+    window = glfwCreateWindow(400, 400, "R - rotate, C - camera", None, None)
     if not window:
         glfwTerminate()
         sys.exit(-1)
