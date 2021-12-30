@@ -31,6 +31,119 @@ att_constant = 1.0
 att_linear = 0.05
 att_quadratic = 0.001
 
+is_t_clicked, is_h_clicked = False, False
+texture1, texture2 = Image.open("tekstura.tga"), Image.open("tom.tga")
+
+
+# kwadrat 2D z teksturą
+def draw_textured_square():
+
+    glBegin(GL_TRIANGLES)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(4.0, -4.0, 0.0)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3f(4.0, 4.0, 0.0)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-4.0, 4.0, 0.0)
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-4.0, -4.0, 0.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(4.0, -4.0, 0.0)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-4.0, 4.0, 0.0)
+    glEnd()
+
+
+# ostrosłup 3D z teksturą + możliwość ukrycia jednej ściany (przycisk H)
+def draw_textured_pyramid():
+
+    global is_h_clicked
+
+    glBegin(GL_TRIANGLES)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-4.0, -4.0, 0.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(4.0, -4.0, 0.0)
+    glTexCoord2f(0.5, 0.5)
+    glVertex3f(0.0, 0.0, 4.0)
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-4.0, 4.0, 0.0)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-4.0, -4.0, 0.0)
+    glTexCoord2f(0.5, 0.5)
+    glVertex3f(0.0, 0.0, 4.0)
+    glEnd()
+
+    if is_h_clicked:
+        glBegin(GL_TRIANGLES)
+        glTexCoord2f(1.0, 1.0)
+        glVertex3f(4.0, 4.0, 0.0)
+        glTexCoord2f(0.5, 0.5)
+        glVertex3f(0.0, 0.0, 4.0)
+        glTexCoord2f(0.0, 1.0)
+        glVertex3f(-4.0, 4.0, 0.0)
+        glEnd()
+    else:
+        glBegin(GL_TRIANGLES)
+        glTexCoord2f(1.0, 1.0)
+        glVertex3f(4.0, 4.0, 0.0)
+        glTexCoord2f(0.0, 1.0)
+        glVertex3f(-4.0, 4.0, 0.0)
+        glTexCoord2f(0.5, 0.5)
+        glVertex3f(0.0, 0.0, 4.0)
+        glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(4.0, -4.0, 0.0)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3f(4.0, 4.0, 0.0)
+    glTexCoord2f(0.5, 0.5)
+    glVertex3f(0.0, 0.0, 4.0)
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-4.0, -4.0, 0.0)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-4.0, 4.0, 0.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(4.0, -4.0, 0.0)
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(4.0, -4.0, 0.0)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-4.0, 4.0, 0.0)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3f(4.0, 4.0, 0.0)
+    glEnd()
+
+
+# zmiana tekstur (przełączanie przyciskiem T)
+def switch_pyramid_texture():
+
+    global is_t_clicked
+    global texture1, texture2
+
+    if is_t_clicked:
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, 3, texture2.size[0], texture2.size[1], 0,
+            GL_RGB, GL_UNSIGNED_BYTE, texture2.tobytes("raw", "RGB", 0, -1)
+        )
+    else:
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, 3, texture1.size[0], texture1.size[1], 0,
+            GL_RGB, GL_UNSIGNED_BYTE, texture1.tobytes("raw", "RGB", 0, -1)
+        )
+
 
 def startup():
     update_viewport(None, 400, 400)
@@ -61,6 +174,7 @@ def startup():
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
+    # defaultowa tekstura
     image = Image.open("tekstura.tga")
 
     glTexImage2D(
@@ -87,24 +201,14 @@ def render(time):
 
     glRotatef(theta, 0.0, 1.0, 0.0)
 
-    # kwadrat
-    glBegin(GL_TRIANGLES)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3f(4.0, -4.0, 0.0)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3f(4.0, 4.0, 0.0)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3f(-4.0, 4.0, 0.0)
-    glEnd()
+    # 3.0
+    # draw_textured_square()
 
-    glBegin(GL_TRIANGLES)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3f(-4.0, -4.0, 0.0)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3f(4.0, -4.0, 0.0)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3f(-4.0, 4.0, 0.0)
-    glEnd()
+    # 3.5 4.0
+    draw_textured_pyramid()
+
+    # 4.5
+    switch_pyramid_texture()
 
     glFlush()
 
@@ -128,8 +232,14 @@ def update_viewport(window, width, height):
 
 
 def keyboard_key_callback(window, key, scancode, action, mods):
+    global is_t_clicked, is_h_clicked
+
     if key == GLFW_KEY_ESCAPE and action == GLFW_PRESS:
         glfwSetWindowShouldClose(window, GLFW_TRUE)
+    if key == GLFW_KEY_T and action == GLFW_PRESS:
+        is_t_clicked = not is_t_clicked
+    if key == GLFW_KEY_H and action == GLFW_PRESS:
+        is_h_clicked = not is_h_clicked
 
 
 def mouse_motion_callback(window, x_pos, y_pos):
