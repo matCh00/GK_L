@@ -13,6 +13,8 @@ vertex_buffer = None
 P_matrix = None
 
 
+# w shaderze wierzchołków - nowe wyjście vec4, w main nadanie mu wartości
+# w shaderze fragmentów - nowe wejście vec4, w main przypisanie wartości
 def compile_shaders():
     vertex_shader_source = """
         #version 330 core

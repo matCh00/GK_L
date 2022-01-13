@@ -13,7 +13,7 @@ wall_colors_buffer = None
 P_matrix = None
 
 
-# w shaderze wierzchołków - dodatkowa zmienna wejściowa wall_colors, przekazanie jej na wejście
+# dodano funkcję rand(), która jest uzależniona od gl_VertexID i gl_InstanceID (każdy obiekt inaczej)
 def compile_shaders():
     vertex_shader_source = """
         #version 330 core
@@ -27,8 +27,15 @@ def compile_shaders():
         uniform mat4 V_matrix;
         uniform mat4 P_matrix;
 
+        float PHI = 1.61803398874989484820459;
+        float rand() {
+            return fract(sin(distance(position.xy*PHI, 
+            vec2(gl_VertexID, gl_InstanceID))*position.y*PHI)*position.x) * 0.5;
+        }
+        
         void main(void) {
-            gl_Position = P_matrix * V_matrix * M_matrix * position;
+            gl_Position = P_matrix * V_matrix * M_matrix * 
+            (position + vec4(gl_InstanceID % 10, gl_InstanceID / 10 + rand(), 0, 0));
             vertex_color = wall_colors;
         }
     """
@@ -147,7 +154,6 @@ def startup():
         -0.25, +0.25, -0.25,
     ], dtype='float32')
 
-# nowa tablica z kolorami (trójkąty)
     wall_colors = numpy.array([
         1.00, 0.00, 0.00,
         1.00, 0.00, 0.00,
@@ -206,12 +212,10 @@ def startup():
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
     glEnableVertexAttribArray(0)
 
-# nowy bufor danych
     wall_colors_buffer = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, wall_colors_buffer)
     glBufferData(GL_ARRAY_BUFFER, wall_colors, GL_STATIC_DRAW)
 
-# nowe wywołania
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
     glEnableVertexAttribArray(1)
 
@@ -225,7 +229,6 @@ def shutdown():
     glDeleteProgram(rendering_program)
     glDeleteVertexArrays(1, vertex_array_object)
     glDeleteBuffers(1, vertex_buffer)
-    # usunięcie nowego byfora danych
     glDeleteBuffers(2, wall_colors_buffer)
 
 
@@ -236,8 +239,8 @@ def render(time):
     M_matrix = glm.rotate(glm.mat4(1.0), time, glm.vec3(1.0, 1.0, 0.0))
 
     V_matrix = glm.lookAt(
-        glm.vec3(0.0, 0.0, 1.0),
-        glm.vec3(0.0, 0.0, 0.0),
+        glm.vec3(0.0, 0.0, 12.0),
+        glm.vec3(4.0, 4.0, 1.0),
         glm.vec3(0.0, 1.0, 0.0)
     )
 
@@ -250,7 +253,7 @@ def render(time):
     glUniformMatrix4fv(V_location, 1, GL_FALSE, glm.value_ptr(V_matrix))
     glUniformMatrix4fv(P_location, 1, GL_FALSE, glm.value_ptr(P_matrix))
 
-    glDrawArrays(GL_TRIANGLES, 0, 36)
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 100)
 
 
 def update_viewport(window, width, height):
