@@ -464,7 +464,7 @@ def main():
     if not glfwInit():
         sys.exit(-1)
 
-    window = glfwCreateWindow(500, 400, "przyciski 1-4: zadania, Texture, Hide", None, None)
+    window = glfwCreateWindow(400, 400, "przyciski 1-4: zadania, T, H", None, None)
     if not window:
         glfwTerminate()
         sys.exit(-1)
